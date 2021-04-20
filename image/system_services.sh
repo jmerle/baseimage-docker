@@ -18,17 +18,25 @@ chown :docker_env /etc/container_environment.sh /etc/container_environment.json
 chmod 640 /etc/container_environment.sh /etc/container_environment.json
 ln -s /etc/container_environment.sh /etc/profile.d/
 
-# Installing runit on ARM causes the process to hang indefinitely, so we don't install it
-# As a consequence we cannot run syslog, ssh and cron
-
 ## Install runit.
-# $minimal_apt_get_install runit
+# We install runit from source as the apt-get version causes the bash script to hang indefinitely on ARM64
+$minimal_apt_get_install wget gzip tar build-essential
+mkdir -p /package
+chmod 1755 /package
+cd /package
+wget http://smarden.org/runit/runit-2.1.2.tar.gz
+gunzip runit-2.1.2.tar
+tar -xpf runit-2.1.2.tar
+rm runit-2.1.2.tar
+cd admin/runit-2.1.2
+package/compile
+package/upgrade
 
 ## Install a syslog daemon and logrotate.
-# [ "$DISABLE_SYSLOG" -eq 0 ] && /bd_build/services/syslog-ng/syslog-ng.sh || true
+[ "$DISABLE_SYSLOG" -eq 0 ] && /bd_build/services/syslog-ng/syslog-ng.sh || true
 
 ## Install the SSH server.
-# [ "$DISABLE_SSH" -eq 0 ] && /bd_build/services/sshd/sshd.sh || true
+[ "$DISABLE_SSH" -eq 0 ] && /bd_build/services/sshd/sshd.sh || true
 
 ## Install cron daemon.
-# [ "$DISABLE_CRON" -eq 0 ] && /bd_build/services/cron/cron.sh || true
+[ "$DISABLE_CRON" -eq 0 ] && /bd_build/services/cron/cron.sh || true
